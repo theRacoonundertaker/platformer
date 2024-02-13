@@ -1,0 +1,97 @@
+import pygame
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption('Side-Scrolling Game')
+running = True
+clock = pygame.time.Clock()
+
+# Globals
+player = [100, 450, 0, 0]  # xpos, ypos, xvel, yvel
+isOnGround = False
+offset = 0
+platforms = [(500, 400), (700, 300)]
+
+# Define colors
+BLUE = (0, 0, 255)
+WHITE = (255, 255, 255)
+DARK_GREEN = (0, 100, 0)  # Dark green color
+
+
+def draw_clouds():
+    global isOnGround
+    # Draw clouds in the background
+    for x in range(100, 800, 300):  # this loop controls WHERE and HOW MANY Clouds are drawn
+        for i in range(3):  # draws 3 circles
+            pygame.draw.circle(screen, WHITE, (x + offset, 100), 40)
+            pygame.draw.circle(screen, WHITE, (x - 50 + offset, 125), 40)
+            pygame.draw.circle(screen, WHITE, (x + 50 + offset, 125), 40)
+            pygame.draw.rect(screen, WHITE, (x - 50 + offset, 100, 100, 65))  # Flatten bottom edge
+
+
+def draw_platforms():
+    for i in range(len(platforms)):
+        pygame.draw.rect(screen, (150, 10, 10), (platforms[i][0] + offset, platforms[i][1], 100, 30))
+
+
+while running:  # Main Game Loop
+    # Input Section
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    keys = pygame.key.get_pressed()
+
+    # Physics Section
+    # Jump mechanics
+    if isOnGround == True and keys[pygame.K_UP]:
+        player[3] = -15  # Player jumps
+        isOnGround = False
+
+    # Move player
+    if keys[pygame.K_LEFT]:
+        if offset > 260 and player[0] > 0:  # check if you've reached the left edge of the map
+            player[2] = -5  # let player approach side of game screen
+    elif player[0] > 400 and offset < -1500:  # check if we're on the far right edge of the map
+        player[2] = -5  # let player get back to the center of the game screen
+    elif player[0] > 0:  # if player is recentered, move the *offset*, not the player
+        offset += -5
+        player[2] = 0
+    else:
+        player[2] = 0  # make sure motion is off (stops from going off edge)
+
+    if isOnGround == False:
+        player[3] += 1  # gravity
+
+    player[0] += player[2]  # add velocity to x position
+    player[1] += player[3]  # add velocity to y position
+
+    # Check player's y position
+    if player[1] > 450:
+        player[1] = 450
+        isOnGround = True
+
+    # Render section
+    screen.fill((135, 206, 235))  # Sky Blue Background
+    draw_clouds()  # Function call
+    draw_platforms()  # Function call
+    pygame.draw.rect(screen, (255, 0, 0), (player[0], player[1], 30, 30))  # player
+
+    # Draw ground
+    pygame.draw.rect(screen, DARK_GREEN, pygame.Rect(0, 500, 800, 100))
+
+    # Draw trees
+    pygame.draw.rect(screen, (139, 69, 19), pygame.Rect(100, 400, 50, 100))  # Tree trunk
+    pygame.draw.polygon(screen, (34, 139, 34), [(75, 400), (125, 300), (175, 400)])  # Tree leaves
+
+    pygame.draw.rect(screen, (139, 69, 19), pygame.Rect(400, 400, 50, 100))  # Tree trunk
+    pygame.draw.polygon(screen, (34, 139, 34), [(375, 400), (425, 300), (475, 400)])  # Tree leaves
+
+    pygame.draw.rect(screen, (139, 69, 19), pygame.Rect(700, 400, 50, 100))  # Tree trunk
+    pygame.draw.polygon(screen, (34, 139, 34), [(675, 400), (725, 300), (775, 400)])  # Tree leaves
+
+    pygame.display.flip()
+
+    clock.tick(30)
+
+pygame.quit()
